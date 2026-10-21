@@ -45,9 +45,6 @@ function bc_pdo(): PDO
         $sslmode
     );
 
-    // URL-decode password (parse_url ya lo decodifica; por si viene raw)
-    $pass = rawurldecode(urlencode($pass)); // noop-safe identity if already decoded
-
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

@@ -22,6 +22,15 @@ if ($path === '/api') {
 }
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
+if ($method === 'GET' && ($path === '/api/health' || $path === '/api')) {
+    bc_json([
+        'ok' => true,
+        'service' => 'banco-cacao-php',
+        'cacaoPerMxn' => bc_config()['cacao_per_mxn'],
+        'message' => 'Depósitos MXN → cacao → canje (PHP/Hostinger)',
+    ]);
+}
+
 try {
     $pdo = bc_pdo();
     route($pdo, $method, $path);
@@ -32,14 +41,6 @@ try {
 
 function route(PDO $pdo, string $method, string $path): void
 {
-    if ($method === 'GET' && ($path === '/api/health' || $path === '/api')) {
-        bc_json([
-            'ok' => true,
-            'service' => 'banco-cacao-php',
-            'cacaoPerMxn' => bc_config()['cacao_per_mxn'],
-            'message' => 'Depósitos MXN → cacao → canje (PHP/Hostinger)',
-        ]);
-    }
 
     if ($method === 'POST' && $path === '/api/auth/register') {
         handle_register($pdo);
