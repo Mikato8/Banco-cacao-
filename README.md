@@ -63,16 +63,26 @@ npm run dev
 | POST | `/api/products/redeem` | Canjear con cacao |
 | POST | `/api/products` | Crear producto (SELLER/ADMIN) |
 
-## Neon PostgreSQL (opcional)
+## Neon PostgreSQL
 
-1. Crea un proyecto en Neon y copia `DATABASE_URL`
-2. En `server/prisma/schema.prisma` cambia:
-   - `provider = "postgresql"`
-3. En `.env`:
+El proyecto está configurado para **Neon** (`provider = "postgresql"`).
+
+1. Copia la connection string del **pooler** al `.env` local (nunca la subas a git):
    ```env
-   DATABASE_URL="postgresql://...@ep-xxx.neon.tech/neondb?sslmode=require"
+   DATABASE_URL="postgresql://...@ep-xxx-pooler....neon.tech/neondb?sslmode=require"
    ```
-4. `npm run db:push && npm run db:seed`
+2. Aplica schema + seed:
+   ```bash
+   npm run db:push
+   npm run db:seed
+   ```
+
+Notas técnicas:
+- En este entorno el **schema engine** nativo de Prisma devolvía `P1001` contra Neon,
+  aunque `node-pg` sí conectaba. Por eso el runtime usa `@prisma/adapter-pg` y
+  `db:push` aplica el SQL generado vía `scripts/apply-sql.mjs`.
+- No pegues la URL con contraseña en issues, chats ni commits. Si se filtró, **rota**
+  el password en el dashboard de Neon.
 
 ## REA
 

@@ -2,10 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// SQLite local por defecto. Para Neon/Postgres cambia provider a "postgresql"
-// y usa DATABASE_URL de Neon.
+// Neon PostgreSQL (pooler). DATABASE_URL en .env — no commitear secretos.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
