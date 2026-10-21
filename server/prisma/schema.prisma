@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite local por defecto. Para Neon/Postgres cambia provider a "postgresql"
+// y usa DATABASE_URL de Neon.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SELLER
+  CLIENT
+}
+
+enum LedgerType {
+  DEPOSIT
+  TRANSFER_IN
+  TRANSFER_OUT
+  REDEEM
+  ADJUST
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(CLIENT)
+  cacaoBalance Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ledgerFrom   LedgerEntry[] @relation("LedgerFrom")
+  ledgerTo     LedgerEntry[] @relation("LedgerTo")
+  products     Product[]
+  redemptions  Redemption[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  cacaoPrice  Int
+  stock       Int      @default(0)
+  active      Boolean  @default(true)
+  sellerId    String?
+  seller      User?    @relation(fields: [sellerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  redemptions Redemption[]
+}
+
+model LedgerEntry {
+  id          String     @id @default(cuid())
+  type        LedgerType
+  amountCacao Int
+  amountMxn   Int?
+  note        String?
+  meta        String?
+  createdAt   DateTime   @default(now())
+
+  fromUserId  String?
+  toUserId    String?
+  fromUser    User?      @relation("LedgerFrom", fields: [fromUserId], references: [id])
+  toUser      User?      @relation("LedgerTo", fields: [toUserId], references: [id])
+
+  redemption  Redemption?
+}
+
+model Redemption {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  cacaoPaid Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  user      User        @relation(fields: [userId], references: [id])
+  product   Product     @relation(fields: [productId], references: [id])
+  ledgerId  String      @unique
+  ledger    LedgerEntry @relation(fields: [ledgerId], references: [id])
+}

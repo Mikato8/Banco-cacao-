@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, rgba(120, 53, 15, 0.35), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(67, 40, 24, 0.45), transparent 50%),
+    #0c0a09;
+}
