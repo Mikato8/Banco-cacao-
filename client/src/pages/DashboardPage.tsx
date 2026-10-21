@@ -1,5 +1,7 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { CacaoBalanceCard } from '../components/CacaoBalanceCard';
+import { ProductCatalog } from '../components/ProductCatalog';
 import { api, type LedgerEntry, type Product } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
@@ -7,6 +9,8 @@ export function DashboardPage() {
   const { user, loading, logout, setUser, refresh } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [cacaoPerMxn, setCacaoPerMxn] = useState(10);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [depositMxn, setDepositMxn] = useState('50');
   const [transferEmail, setTransferEmail] = useState('vendedor@bancocacao.local');
   const [transferAmount, setTransferAmount] = useState('10');
@@ -14,19 +18,31 @@ export function DashboardPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function load() {
-    const [p, l] = await Promise.all([
-      api<{ products: Product[] }>('/api/products'),
-      api<{ entries: LedgerEntry[] }>('/api/wallet/ledger'),
-    ]);
-    setProducts(p.products);
-    setLedger(l.entries);
-  }
+  const loadDashboard = useCallback(async () => {
+    setCatalogLoading(true);
+    try {
+      const [balanceRes, productsRes, ledgerRes] = await Promise.all([
+        api<{ cacaoBalance: number; cacaoPerMxn: number }>('/api/wallet/balance'),
+        api<{ products: Product[] }>('/api/products'),
+        api<{ entries: LedgerEntry[] }>('/api/wallet/ledger'),
+      ]);
+      setCacaoPerMxn(balanceRes.cacaoPerMxn);
+      setProducts(productsRes.products);
+      setLedger(ledgerRes.entries);
+      setUser((prev) =>
+        prev ? { ...prev, cacaoBalance: balanceRes.cacaoBalance } : prev,
+      );
+    } finally {
+      setCatalogLoading(false);
+    }
+  }, [setUser]);
 
   useEffect(() => {
     if (!user) return;
-    void load().catch((e) => setError(e instanceof Error ? e.message : 'Error al cargar'));
-  }, [user]);
+    void loadDashboard().catch((e) =>
+      setError(e instanceof Error ? e.message : 'Error al cargar el dashboard'),
+    );
+  }, [user?.id]);
 
   if (loading) {
     return <div className="grid min-h-screen place-items-center text-stone-400">Cargando…</div>;
@@ -34,11 +50,11 @@ export function DashboardPage() {
   if (!user) return <Navigate to="/login" replace />;
 
   async function afterMoney(nextBalance?: number) {
-    await refresh();
-    if (typeof nextBalance === 'number' && user) {
-      setUser({ ...user, cacaoBalance: nextBalance });
+    if (typeof nextBalance === 'number') {
+      setUser((prev) => (prev ? { ...prev, cacaoBalance: nextBalance } : prev));
     }
-    await load();
+    await refresh();
+    await loadDashboard();
   }
 
   async function onDeposit(e: FormEvent) {
@@ -82,19 +98,23 @@ export function DashboardPage() {
     }
   }
 
-  async function redeem(productId: string) {
+  async function onRedeem(productId: string, quantity: number) {
     setBusy(true);
     setError('');
     setMessage('');
     try {
-      const data = await api<{ cacaoBalance: number }>('/api/products/redeem', {
-        method: 'POST',
-        body: JSON.stringify({ productId, quantity: 1 }),
-      });
-      setMessage('Canje exitoso 🍫');
+      const data = await api<{ cacaoBalance: number; redemption: { cacaoPaid: number } }>(
+        '/api/products/redeem',
+        {
+          method: 'POST',
+          body: JSON.stringify({ productId, quantity }),
+        },
+      );
+      setMessage(`Canje exitoso · −${data.redemption.cacaoPaid} cacao`);
       await afterMoney(data.cacaoBalance);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error');
+      throw err;
     } finally {
       setBusy(false);
     }
@@ -111,6 +131,7 @@ export function DashboardPage() {
           </p>
         </div>
         <button
+          type="button"
           onClick={logout}
           className="rounded-xl border border-stone-700 px-4 py-2 text-sm text-stone-300 hover:bg-stone-900"
         >
@@ -120,6 +141,7 @@ export function DashboardPage() {
 
       {(message || error) && (
         <div
+          role="status"
           className={`mb-6 rounded-2xl px-4 py-3 text-sm ${error ? 'bg-red-950/60 text-red-200' : 'bg-emerald-950/50 text-emerald-200'}`}
         >
           {error || message}
@@ -127,19 +149,17 @@ export function DashboardPage() {
       )}
 
       <section className="mb-8 grid gap-4 md:grid-cols-3">
-        <div className="rounded-3xl border border-amber-800/40 bg-gradient-to-br from-amber-900/50 to-stone-900 p-6 md:col-span-2">
-          <p className="text-sm text-amber-200/80">Tu saldo en símbolos cacao</p>
-          <p className="mt-2 text-5xl font-bold tabular-nums text-amber-50">
-            🍫 {user.cacaoBalance.toLocaleString('es-MX')}
-          </p>
-          <p className="mt-3 text-sm text-stone-300">Tasa demo: 1 MXN = 10 cacao</p>
-        </div>
+        <CacaoBalanceCard
+          balance={user.cacaoBalance}
+          cacaoPerMxn={cacaoPerMxn}
+          loading={catalogLoading && user.cacaoBalance === 0}
+        />
         <div className="rounded-3xl border border-stone-800 bg-stone-900/70 p-6">
           <p className="text-sm text-stone-400">Acciones rápidas</p>
           <ul className="mt-3 space-y-2 text-sm text-amber-100/90">
             <li>1. Depositar MXN → cacao</li>
             <li>2. Transferir cacao a otro usuario</li>
-            <li>3. Canjear por productos</li>
+            <li>3. Canjear por productos del catálogo</li>
           </ul>
         </div>
       </section>
@@ -161,6 +181,7 @@ export function DashboardPage() {
             />
           </label>
           <button
+            type="submit"
             disabled={busy}
             className="mt-4 w-full rounded-xl bg-amber-600 py-2.5 font-semibold text-stone-950 hover:bg-amber-500 disabled:opacity-50"
           >
@@ -193,6 +214,7 @@ export function DashboardPage() {
             />
           </label>
           <button
+            type="submit"
             disabled={busy}
             className="mt-4 w-full rounded-xl border border-amber-700/60 py-2.5 font-semibold text-amber-100 hover:bg-amber-950/40 disabled:opacity-50"
           >
@@ -201,37 +223,15 @@ export function DashboardPage() {
         </form>
       </div>
 
-      <section className="mt-8">
-        <h2 className="mb-4 text-xl font-semibold text-amber-50">Catálogo canjeable</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products.map((p) => (
-            <article
-              key={p.id}
-              className="flex flex-col rounded-3xl border border-stone-800 bg-stone-900/70 p-5"
-            >
-              <h3 className="font-semibold text-amber-100">{p.name}</h3>
-              <p className="mt-1 flex-1 text-sm text-stone-400">{p.description}</p>
-              <div className="mt-4 flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-amber-300">
-                  🍫 {p.cacaoPrice} · stock {p.stock}
-                </span>
-                <button
-                  disabled={busy || p.stock < 1}
-                  onClick={() => void redeem(p.id)}
-                  className="rounded-lg bg-amber-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-40"
-                >
-                  Canjear
-                </button>
-              </div>
-              {p.seller && (
-                <p className="mt-2 text-xs text-stone-500">Vendedor: {p.seller.name}</p>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
+      <ProductCatalog
+        products={products}
+        cacaoBalance={user.cacaoBalance}
+        loading={catalogLoading}
+        busy={busy}
+        onRedeem={onRedeem}
+      />
 
-      <section className="mt-10">
+      <section className="mt-10" aria-label="Historial de movimientos">
         <h2 className="mb-4 text-xl font-semibold text-amber-50">Movimientos</h2>
         <div className="overflow-hidden rounded-3xl border border-stone-800">
           <table className="w-full text-left text-sm">

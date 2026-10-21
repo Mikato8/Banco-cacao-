@@ -21,7 +21,7 @@ type AuthCtx = {
   }) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
-  setUser: (u: User | null) => void;
+  setUser: (u: User | null | ((prev: User | null) => User | null)) => void;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
