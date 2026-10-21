@@ -1,0 +1,82 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fafaf9;
+  background:
+    radial-gradient(ellipse at top, rgba(120, 53, 15, 0.35), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(67, 40, 24, 0.45), transparent 50%),
+    #0c0a09;
+}
+a { color: #f59e0b; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.card {
+  background: rgba(28, 25, 23, 0.75);
+  border: 1px solid #44403c;
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+}
+.balance {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.55), rgba(28, 25, 23, 0.9));
+  border-color: rgba(146, 64, 14, 0.5);
+}
+.balance h2 { margin: 0.35rem 0; font-size: 2.75rem; }
+.grid { display: grid; gap: 1rem; }
+@media (min-width: 800px) {
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+}
+label { display: block; font-size: 0.9rem; margin-top: 0.75rem; color: #d6d3d1; }
+input, select, button {
+  font: inherit;
+  border-radius: 0.75rem;
+  border: 1px solid #57534e;
+  background: #0c0a09;
+  color: #fafaf9;
+  padding: 0.55rem 0.75rem;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+button {
+  background: #d97706;
+  border: none;
+  color: #1c1917;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.ghost {
+  background: transparent;
+  border: 1px solid #92400e;
+  color: #fde68a;
+}
+.msg {
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.msg.ok { background: rgba(6, 78, 59, 0.45); color: #a7f3d0; }
+.msg.err { background: rgba(127, 29, 29, 0.45); color: #fecaca; }
+.muted { color: #a8a29e; font-size: 0.85rem; }
+.row { display: flex; gap: 0.75rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { text-align: left; padding: 0.65rem 0.5rem; border-top: 1px solid #292524; }
+th { color: #a8a29e; font-weight: 500; }
+.login-box { max-width: 420px; margin: 10vh auto; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; background: #0c0a09; padding: 0.25rem; border-radius: 0.85rem; margin-bottom: 1rem; }
+.tabs button { margin: 0; background: transparent; color: #a8a29e; }
+.tabs button.active { background: #b45309; color: #fff; }
+.badge {
+  display: inline-block;
+  background: rgba(69, 26, 3, 0.8);
+  color: #fde68a;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+}

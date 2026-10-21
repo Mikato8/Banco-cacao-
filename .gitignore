@@ -6,9 +6,16 @@ dist
 *.db-journal
 .DS_Store
 server/prisma/dev.db
+server/public
 client/dist
 coverage
+.neon
 test-results
 playwright-report
 blob-report
 playwright/.cache
+test-results
+playwright-report
+blob-report
+playwright/.cache
+php/config/.env
