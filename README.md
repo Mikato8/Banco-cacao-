@@ -84,6 +84,23 @@ Notas técnicas:
 - No pegues la URL con contraseña en issues, chats ni commits. Si se filtró, **rota**
   el password en el dashboard de Neon.
 
+
+## Tests E2E
+
+```bash
+# API: depósito + canje + rechazo por saldo insuficiente
+npm run test:e2e:api
+
+# UI (Playwright): login → depósito → canje en el dashboard
+npm run test:e2e:ui
+
+# Ambos
+npm run test:e2e
+```
+
+Los tests de API levantan Express en un puerto efímero contra Neon.
+Los de UI arrancan API (`4010`) + Vite (`5174`) vía `playwright.config.ts`.
+
 ## REA
 
 Se usó **Reverse Engineer Anything** (`capture_browser_scenario`) contra la home pública de Mercado Pago. Resultado observado: **HTTP 403** / empty-state (anti-bot). No se accedió a sesión autenticada ni a APIs privadas. Detalle y evidence IDs: `docs/rea/findings.md`.

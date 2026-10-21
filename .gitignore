@@ -8,3 +8,7 @@ dist
 server/prisma/dev.db
 client/dist
 coverage
+test-results
+playwright-report
+blob-report
+playwright/.cache
